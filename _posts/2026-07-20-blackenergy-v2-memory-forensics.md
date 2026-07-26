@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "BlackEnergy v2: Memory Forensics of a Rootkit Infection"
-date: 2026-07-20
+date: 2026-04-19
 categories: [memory-forensics]
 tags: [volatility, rootkit, dll-injection, cyberdefenders]
 ---
