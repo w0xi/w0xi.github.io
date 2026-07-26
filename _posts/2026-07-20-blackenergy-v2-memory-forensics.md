@@ -30,7 +30,7 @@ theft. The attack leveraged a previously unseen variant of BlackEnergy v2, a
 sophisticated rootkit with documented use against critical infrastructure.
 
 The task: analyse a raw memory dump of the compromised Windows XP machine
-(`CYBERDEF-567078-20230213-171333.raw`) to determine the scope of infection — which
+(`CYBERDEF-567078-20230213-171333.raw`) to determine the scope of infection: which
 processes were abused, how the malware concealed itself, and what artifacts confirm
 malicious activity.
 
@@ -53,7 +53,7 @@ Volatility 3 · VirusTotal · `md5sum` / `sha256sum`
 
 ### 1. Profile identification and environment baseline
 
-The first step with any memory dump is establishing the correct Volatility profile —
+The first step with any memory dump is establishing the correct Volatility profile:
 the wrong one returns garbage output. Running `imageinfo` (Vol2) or `windows.info`
 (Vol3) suggested two candidates: `WinXPSP2x86` and `WinXPSP3x86`. The lab accepts
 **`WinXPSP2x86`**.
@@ -75,7 +75,7 @@ vol -f CYBERDEF-567078-20230213-171333.raw windows.pslist
 ### 2. Suspicious process identification
 
 `rootkit.exe` is self-evidently abnormal. `pstree` confirmed the parent-child
-relationship: `rootkit.exe` spawned `cmd.exe` (PID 1960) — consistent with an attacker
+relationship: `rootkit.exe` spawned `cmd.exe` (PID 1960) which is consistent with an attacker
 dropping a rootkit and using it to launch a command shell. `psxview` further revealed
 processes attempting to hide from the standard process list.
 
@@ -88,7 +88,7 @@ vol -f CYBERDEF-567078-20230213-171333.raw windows.pstree | less -S
 ### 3. Code injection detection via malfind
 
 `malfind` scans for memory regions that are executable, writable, and contain an MZ
-header — the hallmarks of injected code rather than random data.
+header: the hallmarks of injected code rather than random data.
 
 **`svchost.exe` (PID 880)** stood out clearly: the VAD entry showed
 `PAGE_EXECUTE_READWRITE` protection and bytes beginning `4D 5A`, the MZ magic bytes of
@@ -101,7 +101,7 @@ vol -f CYBERDEF-567078-20230213-171333.raw windows.malfind
 ![malfind output showing MZ header magic bytes](/screenshots/3vol_MZHeaderMagicBytes.png)
 
 Dumping the injected region and submitting the hash to VirusTotal confirmed it as a
-BlackEnergy variant — multiple vendors flagged it as malicious.
+BlackEnergy variant: multiple vendors flagged it as malicious.
 
 ### 4. Hidden DLL and kernel driver artifacts
 
@@ -118,7 +118,7 @@ One entry returned all three as False: **`msxml3r.dll`**.
 ![ldrmodules output showing hidden msxml3r.dll](/screenshots/4vol_msxml3rDLL.png)
 
 `windows.handles --pid 880` revealed an unusual file reference:
-`C:\WINDOWS\system32\drivers\str.sys` — the kernel-mode component of BlackEnergy, used
+`C:\WINDOWS\system32\drivers\str.sys` is the kernel-mode component of BlackEnergy, used
 to hide processes and files from the OS.
 
 The raw output was noisy, so I filtered it:
@@ -145,7 +145,7 @@ vol -f CYBERDEF-567078-20230213-171333.raw windows.handles --pid 880 | grep File
 ## Lessons learned
 
 1. `PAGE_EXECUTE_READWRITE` combined with an MZ header is a clear code injection
-   indicator — legitimate DLLs do not load this way.
+   indicator, legitimate DLLs do not load this way.
 
 2. The `ldrmodules` InLoad/InInit/InMem flags are more reliable than filenames for
    identifying hidden modules.
