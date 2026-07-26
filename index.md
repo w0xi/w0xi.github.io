@@ -3,8 +3,6 @@ layout: page
 title: Write-ups
 ---
 
-I do memory forensics and stuff.
-
 
 <ul class="post-list">
   {% for post in site.posts %}
