@@ -1,13 +1,15 @@
 title: w0xi
 description: Memory forensics, network forensics, incident analysis.
-theme: jekyll-theme-midnight
+remote_theme: jekyll/minima
 minima:
-  skin: classic
+  skin: dark
 
 header_pages:
+  - about.md
 
 show_excerpts: true
 
 plugins:
+  - jekyll-remote-theme
   - jekyll-feed
   - jekyll-seo-tag
