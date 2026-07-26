@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "PacketMaze: Insider Threat Network Investigation"
-date: 2026-07-24
+date: 2026-04-20
 categories: [network-forensics]
 tags: [wireshark, exiftool, pcap, insider-threat, cyberdefenders]
 ---
@@ -31,8 +31,8 @@ data exfiltration.
 
 The capture (`UNODC-GPC-001-003-JohnDoe-NetworkCapture-2021-04-29.pcapng`) covers the
 subject's activity across FTP, DNS, TLS, and UDP. The investigation requires
-correlating artifacts across all of them — file transfers, encrypted communications,
-DNS lookups, and image metadata — to build a complete picture of behaviour and intent.
+correlating artifacts across all of them: file transfers, encrypted communications,
+DNS lookups, and image metadata to build a complete picture of behaviour and intent.
 
 ## Tools
 
@@ -47,7 +47,7 @@ Statistics → Protocol Hierarchy · TCP stream extraction
 | Collection | [T1005](https://attack.mitre.org/techniques/T1005/) | Data from Local System | Photo `20210429_152157.jpg` transferred to external FTP server; EXIF metadata confirmed camera model LM-Q725K (LG Q7+), establishing device attribution |
 | Exfiltration | [T1048.003](https://attack.mitre.org/techniques/T1048/003/) | Exfiltration Over Unencrypted Protocol | File uploaded via FTP `STOR` in plaintext; credentials and file content fully visible in the PCAP |
 | Defense Evasion | [T1071.001](https://attack.mitre.org/techniques/T1071/001/) | Application Layer Protocol: Web Protocols | Subject connected to ProtonMail over TLS 1.3 — end-to-end encrypted email to avoid content monitoring |
-| Defense Evasion | [T1564](https://attack.mitre.org/techniques/T1564/) | Hide Artifacts | Non-standard `/ftp` directory created on the FTP server April 20 at 17:53 — pre-planned staging infrastructure, nine days before the monitored session |
+| Defense Evasion | [T1564](https://attack.mitre.org/techniques/T1564/) | Hide Artifacts | Non-standard `/ftp` directory created on the FTP server April 20 at 17:53, pre-planned staging infrastructure, nine days before the monitored session |
 | Reconnaissance | [T1592](https://attack.mitre.org/techniques/T1592/) | Gather Victim Host Information | DNS lookup for `www.7-zip.org` (packet 15174) shows the subject researching compression tools, consistent with data staging preparation |
 
 ## Walkthrough
@@ -58,7 +58,7 @@ Starting with **Statistics → Protocol Hierarchy** gave an immediate overview o
 protocols present: FTP, FTP-DATA, DNS, TLS, HTTP. A mix of plaintext and encrypted
 activity, suggesting multiple investigative angles.
 
-Filtering for FTP exposed the first critical finding — FTP transmits credentials in
+Filtering for FTP exposed the first critical finding: FTP transmits credentials in
 plaintext. Packet 500 contained the subject's authentication with the password
 **`AfricaCTF2021`** fully visible, no encryption.
 
@@ -76,7 +76,7 @@ The subject's IP was identified as **`192.168.1.26`** and MAC as
 Filtering for DNS and cross-referencing via **Statistics → Conversations → IPv6**
 revealed the DNS server's IPv6 address: `fe80::c80b:adff:feaa:1db7`. This required
 pivoting from the subject's IPv4 address to its MAC, then matching that MAC in the
-IPv6 tab — a multi-step correlation testing understanding of Layer 2 and Layer 3
+IPv6 tab: a multi-step correlation testing understanding of Layer 2 and Layer 3
 addressing.
 
 ```
@@ -116,7 +116,7 @@ exiftool 20210429_152157.jpg
 ![exiftool output showing camera model](/screenshots/lab2_packetmaze/lab2_wireshark_cameraMODEL_3.png)
 
 The FTP directory listing (TCP streams 11–12) showed a non-standard `/ftp` directory
-created **April 20 at 17:53** — nine days prior, indicating pre-planned staging
+created **April 20 at 17:53** which is nine days prior, indicating pre-planned staging
 infrastructure.
 
 ![FTP directory listing showing staging folder](/screenshots/lab2_packetmaze/lab2_wireshark_ftpFOLDER_4.png)
@@ -133,7 +133,7 @@ This revealed `mail.protonmail.com` and its IP address `185.70.41.130`.
 
 ![ProtonMail IP address in Wireshark](/screenshots/lab2_packetmaze/lab2_wireshark_protonmail_5B.png)
 
-Two TLS questions required locating specific sessions — one by session ID, one by
+Two TLS questions required locating specific sessions: one by session ID, one by
 destination domain. For the session ID, a `tls` filter located
 `da4a0000342e4b73...`, returning frame 26906; the reassembled PDU in frame 26913
 contained the full handshake and server certificate public key under Server Key
@@ -154,7 +154,7 @@ random: `24e92513b97a0348f733d16996929a79be21b0b1400cd7e2862a732ce7775b70`.
 
 Filtering FTP-DATA packets revealed the FTP server MAC address:
 **`08:00:27:a6:1f:86`**. Submitting this to dnschecker.org's MAC lookup returned OUI
-registration in the **United States** — a VirtualBox NIC, indicating a virtualised
+registration in the **United States**: a VirtualBox NIC, indicating a virtualised
 server.
 
 ![MAC lookup result showing US registration](/screenshots/lab2_packetmaze/lab2_wireshark_countryUS_7.png)
@@ -174,7 +174,7 @@ server.
 
 ## Lessons learned
 
-1. FTP exposes everything in plaintext — credentials, filenames, and full file
+1. FTP exposes everything in plaintext: credentials, filenames, and full file
    content. SFTP or FTPS are the correct alternatives, and their absence here is
    itself a finding.
 
