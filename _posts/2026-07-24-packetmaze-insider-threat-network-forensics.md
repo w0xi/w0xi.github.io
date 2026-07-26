@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "PacketMaze: Insider Threat Network Investigation"
-date: 2026-07-24
+date: 2026-04-19
 categories: [network-forensics]
 tags: [wireshark, exiftool, pcap, insider-threat, cyberdefenders]
 ---
@@ -43,10 +43,10 @@ Statistics → Protocol Hierarchy · TCP stream extraction
 
 | Tactic | ID | Technique | Evidence observed |
 |---|---|---|---|
-| Initial Access | [T1078](https://attack.mitre.org/techniques/T1078/) | Valid Accounts | Subject authenticated to external FTP server using plaintext credentials — a legitimate user abusing access for unauthorised data transfer |
+| Initial Access | [T1078](https://attack.mitre.org/techniques/T1078/) | Valid Accounts | Subject authenticated to external FTP server using plaintext credentials: a legitimate user abusing access for unauthorised data transfer |
 | Collection | [T1005](https://attack.mitre.org/techniques/T1005/) | Data from Local System | Photo `20210429_152157.jpg` transferred to external FTP server; EXIF metadata confirmed camera model LM-Q725K (LG Q7+), establishing device attribution |
 | Exfiltration | [T1048.003](https://attack.mitre.org/techniques/T1048/003/) | Exfiltration Over Unencrypted Protocol | File uploaded via FTP `STOR` in plaintext; credentials and file content fully visible in the PCAP |
-| Defense Evasion | [T1071.001](https://attack.mitre.org/techniques/T1071/001/) | Application Layer Protocol: Web Protocols | Subject connected to ProtonMail over TLS 1.3 — end-to-end encrypted email to avoid content monitoring |
+| Defense Evasion | [T1071.001](https://attack.mitre.org/techniques/T1071/001/) | Application Layer Protocol: Web Protocols | Subject connected to ProtonMail over TLS 1.3, end-to-end encrypted email to avoid content monitoring |
 | Defense Evasion | [T1564](https://attack.mitre.org/techniques/T1564/) | Hide Artifacts | Non-standard `/ftp` directory created on the FTP server April 20 at 17:53, pre-planned staging infrastructure, nine days before the monitored session |
 | Reconnaissance | [T1592](https://attack.mitre.org/techniques/T1592/) | Gather Victim Host Information | DNS lookup for `www.7-zip.org` (packet 15174) shows the subject researching compression tools, consistent with data staging preparation |
 
@@ -98,7 +98,7 @@ Packet 27300 resolved to `dfir.science`.
 ### 3. File transfer and EXIF metadata extraction
 
 Filtering for FTP-DATA showed file transfer activity. Searching packet bytes for
-`20210429_152157.jpg` identified a `STOR` command in frame 7070 — the subject
+`20210429_152157.jpg` identified a `STOR` command in frame 7070, the subject
 uploading a photo to an external FTP server.
 
 ```
@@ -194,8 +194,8 @@ server.
 
 ## References
 
-- [CyberDefenders — PacketMaze Lab](https://cyberdefenders.org/blueteam-ctf-challenges/packetmaze/)
-- [MITRE ATT&CK — Exfiltration Over Unencrypted Protocol (T1048.003)](https://attack.mitre.org/techniques/T1048/003/)
+- [CyberDefenders PacketMaze Lab](https://cyberdefenders.org/blueteam-ctf-challenges/packetmaze/)
+- [MITRE ATT&CK Exfiltration Over Unencrypted Protocol (T1048.003)](https://attack.mitre.org/techniques/T1048/003/)
 - [exiftool documentation](https://exiftool.org/)
 - [MAC address lookup — dnschecker.org](https://dnschecker.org/mac-lookup.php)
 - [Wireshark TLS analysis guide](https://wiki.wireshark.org/TLS)
