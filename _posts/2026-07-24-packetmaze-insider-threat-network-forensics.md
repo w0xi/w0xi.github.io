@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "PacketMaze: Insider Threat Network Investigation"
-date: 2026-04-20
+date: 2026-07-24
 categories: [network-forensics]
 tags: [wireshark, exiftool, pcap, insider-threat, cyberdefenders]
 ---
