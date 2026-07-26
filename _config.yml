@@ -1,0 +1,14 @@
+title: w0xi
+description: Blue team write-ups — memory forensics, network forensics, incident analysis.
+theme: minima
+minima:
+  skin: classic
+
+header_pages:
+  - about.md
+
+show_excerpts: true
+
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
