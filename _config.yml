@@ -1,5 +1,5 @@
 title: w0xi
-description: Incident analysis, memory forensics, network forensics.
+description: Memory forensics, network forensics, incident analysis.
 remote_theme: jekyll/minima
 permalink: /:title/
 minima:
