@@ -4,6 +4,7 @@ remote_theme: jekyll/minima
 permalink: /:title/
 minima:
   skin: dark
+  hide_site_feed_link: true
 
 header_pages:
   - about.md
