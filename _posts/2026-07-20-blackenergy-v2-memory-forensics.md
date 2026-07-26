@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "BlackEnergy v2: Memory Forensics of a Rootkit Infection"
-date: 2026-07-20
+date: 2026-04-16
 categories: [memory-forensics]
 tags: [volatility, rootkit, dll-injection, cyberdefenders]
 ---
@@ -45,7 +45,7 @@ Volatility 3 · VirusTotal · `md5sum` / `sha256sum`
 | Execution | [T1106](https://attack.mitre.org/techniques/T1106/) | Native API | `rootkit.exe` spawned `cmd.exe` (PID 1960) via Windows API; confirmed via `pstree` parent-child relationship |
 | Privilege Escalation | [T1055.001](https://attack.mitre.org/techniques/T1055/001/) | DLL Injection | `msxml3r.dll` injected into `svchost.exe` PID 880; all three `ldrmodules` flags returned False, indicating a hidden/unlinked DLL |
 | Defense Evasion | [T1014](https://attack.mitre.org/techniques/T1014/) | Rootkit | Kernel driver `str.sys` found at `C:\WINDOWS\system32\drivers\`; kernel-level component hides processes and files |
-| Defense Evasion | [T1036.004](https://attack.mitre.org/techniques/T1036/004/) | Masquerading: Match Legitimate Name | `msxml3r.dll` named to mimic legitimate `msxml3.dll` — one character apart, designed to evade cursory inspection |
+| Defense Evasion | [T1036.004](https://attack.mitre.org/techniques/T1036/004/) | Masquerading: Match Legitimate Name | `msxml3r.dll` named to mimic legitimate `msxml3.dll` one character apart, designed to evade cursory inspection |
 | Discovery | [T1057](https://attack.mitre.org/techniques/T1057/) | Process Discovery | Malware uses mutant objects (`Zones*`, `RasPbFile`, `Wininet*`) within `svchost.exe` to enumerate and coordinate across processes |
 | Collection | [T1005](https://attack.mitre.org/techniques/T1005/) | Data from Local System | Sensitive data theft confirmed per scenario brief; rootkit provided persistent access enabling exfiltration |
 
@@ -160,7 +160,7 @@ vol -f CYBERDEF-567078-20230213-171333.raw windows.handles --pid 880 | grep File
 
 ## References
 
-- [CyberDefenders — BlackEnergy Lab](https://cyberdefenders.org/blueteam-ctf-challenges/blackenergy/)
-- [MITRE ATT&CK — BlackEnergy Malware (S0089)](https://attack.mitre.org/software/S0089/)
+- [CyberDefenders BlackEnergy Lab](https://cyberdefenders.org/blueteam-ctf-challenges/blackenergy/)
+- [MITRE ATT&CK BlackEnergy Malware (S0089)](https://attack.mitre.org/software/S0089/)
 - [Volatility 3 command reference](https://hacktivity.fr/volatility-3-cheatsheet/)
 - [VirusTotal](https://www.virustotal.com/)
