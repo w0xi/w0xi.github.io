@@ -197,5 +197,5 @@ server.
 - [CyberDefenders PacketMaze Lab](https://cyberdefenders.org/blueteam-ctf-challenges/packetmaze/)
 - [MITRE ATT&CK Exfiltration Over Unencrypted Protocol (T1048.003)](https://attack.mitre.org/techniques/T1048/003/)
 - [exiftool documentation](https://exiftool.org/)
-- [MAC address lookup — dnschecker.org](https://dnschecker.org/mac-lookup.php)
+- [MAC address lookup: dnschecker.org](https://dnschecker.org/mac-lookup.php)
 - [Wireshark TLS analysis guide](https://wiki.wireshark.org/TLS)
