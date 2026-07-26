@@ -36,8 +36,7 @@ DNS lookups, and image metadata to build a complete picture of behaviour and int
 
 ## Tools
 
-Wireshark · exiftool · MAC lookup (dnschecker) · Statistics → Conversations ·
-Statistics → Protocol Hierarchy · TCP stream extraction
+Wireshark · exiftool · MAC lookup (dnschecker)
 
 ## MITRE ATT&CK mapping
 
