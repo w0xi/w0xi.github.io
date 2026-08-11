@@ -29,7 +29,7 @@ A multinational corporation suffered a targeted attack resulting in sensitive da
 theft. The attack leveraged a previously unseen variant of BlackEnergy v2, a
 sophisticated rootkit with documented use against critical infrastructure.
 
-The task: analyse a raw memory dump of the compromised Windows XP machine
+The task: analyse a raw memory dump of the compromised Windows machine
 (`CYBERDEF-567078-20230213-171333.raw`) to determine the scope of infection: which
 processes were abused, how the malware concealed itself, and what artifacts confirm
 malicious activity.
