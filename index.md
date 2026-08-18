@@ -1,8 +1,9 @@
 ---
-layout: home
+layout: page
+title: ""
 ---
 
-# Labs
+# Lab Engineering
 
 - ### [FortiBleed 2026](https://w0xi.github.io/fortibleed-2026/)
     *Network Forensics · Easy · Wireshark · 6 questions*
