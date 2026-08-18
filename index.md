@@ -6,7 +6,7 @@ title: ""
 # Lab Engineering
 
 - ### [Chasing Certighost's Tail](https://w0xi.github.io/chasing-certighost/)
-    *SOC · Medium · Logs Interface · 7 questions*
+    *SOC · Medium · Logs · 7 questions*
   
 - ### [FortiBleed 2026](https://w0xi.github.io/fortibleed-2026/)
     *Network Forensics · Easy · Wireshark · 6 questions*
