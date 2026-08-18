@@ -121,7 +121,7 @@ Netlogon. `dce_rpc.log` records the full relay sequence for each attempt:
 
 ![](/screenshots/2siem.png)
 
-That log goes further there's 8 complete Netlogon sessions, each one a relay attempt using the GHOST
+That log goes further into 8 complete Netlogon sessions, each one a relay attempt using the GHOST
 machine account's secure channel to forward `DC01$`'s credentials to the real
 DC. The goal: convince the DC to validate `DC01$`'s identity so the CA will
 issue a certificate belonging to the Domain Controller.
