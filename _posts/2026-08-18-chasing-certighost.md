@@ -55,12 +55,13 @@ the detection logic that should have caught this earlier.
 The investigation interface (`certighost_investigation.html`) is self-contained —
 open it in any browser, no setup required.
 
-## Download
+## Investigation interface
 
-| File | Description |
-|---|---|
-| [`certighost_investigation.html`](https://github.com/w0xi/w0xi.github.io/releases/download/v1.0/certighost_investigation.html) | Lab artifact — open in any browser, no setup required |
-| [`certighost_final.pcap`](https://github.com/w0xi/w0xi.github.io/releases/download/v1.0/certighost_final.pcap) | Optional — packet-level analysis only, not required for any question |
+<a href="https://w0xi.github.io/certighost/sensors.html" style="display:inline-block;padding:10px 20px;background:#2d2d2d;color:#fff;text-decoration:none;border-radius:4px;font-family:monospace;">Open Investigation →</a>
+
+All seven Zeek log types are pre-loaded. No setup, no downloads, open in any browser.
+
+For packet-level analysis: [`certighost_final.pcap`](https://github.com/w0xi/w0xi.github.io/releases/download/v1.0/certighost_final.pcap) (optional — not required for any question)
 
 ## Tools
 
