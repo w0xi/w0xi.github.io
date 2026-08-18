@@ -6,9 +6,9 @@ categories: [soc]
 tags: [zeek, active-directory, adcs, certighost, cve-2026-54121, netlogon]
 ---
 
-*SOC · Medium · SIEM · 7 questions*
+*SOC · Medium · Browser (HTML) · 7 questions*
 
-SOC investigation lab built on CVE-2026-54121 (Certighost), a critical
+SOC investigation lab built on CVE-2026-54121 (Certighost) — a critical
 Active Directory Certificate Services flaw patched in July 2026. The lab
 follows the attack chain from a low-privilege domain user through machine
 account creation, CA callback abuse, and Netlogon relay, reconstructed
@@ -18,7 +18,7 @@ from Zeek network sensor logs.
 
 | | |
 |---|---|
-| Artifact | `Zeek logs + .pcap` |
+| Artifact | `certighost_investigation.html` |
 | DC / CA | `172.16.14.10` |
 | Attacker workstation | `172.16.14.50` |
 | Launching account | `a.novak` (low-privilege, IT helpdesk) |
@@ -40,6 +40,9 @@ authentication as the DC.
 Any authenticated low-privilege domain user can trigger this chain. No admin
 rights, no elevated credentials, no user interaction required.
 
+A public proof-of-concept was released on GitHub in July 2026 (`certighost.py`).
+The lab was built by running this PoC against an isolated AD range and capturing
+the resulting network traffic with Zeek.
 
 ## Scenario
 
@@ -49,20 +52,20 @@ Zeek network sensor logs covering the 35-second window around the alert. Your
 job is to triage the activity, reconstruct the attack chain, and articulate
 the detection logic that should have caught this earlier.
 
-The investigation interface (can be opened below) is self-contained:
+The investigation interface (`certighost_investigation.html`) is self-contained —
 open it in any browser, no setup required.
 
 ## Investigation interface
 
-<a href="https://w0xi.github.io/certighost/sensors.html" style="display:inline-block;padding:10px 20px;background:#2d2d2d;color:#fff;text-decoration:none;border-radius:4px;font-family:monospace;">Open Investigation </a>
+<a href="https://w0xi.github.io/certighost/sensors.html" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:10px 20px;background:#2d2d2d;color:#fff;text-decoration:none;border-radius:4px;font-family:monospace;">Open Investigation →</a>
 
-All seven Zeek log types are pre-loaded.
+All seven Zeek log types are pre-loaded. No setup, no downloads, open in any browser.
 
-For packet-level analysis: [`certighost_final.pcap`](https://github.com/w0xi/w0xi.github.io/releases/download/v1.0/certighost_final.pcap) (optional, not required for any question)
+For packet-level analysis: [`certighost_final.pcap`](https://github.com/w0xi/w0xi.github.io/releases/download/v1.0/certighost_final.pcap) (optional — not required for any question)
 
 ## Tools
 
-Browser (Investigation Interface) · Zeek logs (`conn.log`, `dce_rpc.log`, `ntlm.log`)
+Browser (HTML investigation interface) · Zeek logs (`conn.log`, `dce_rpc.log`, `ntlm.log`)
 
 ## MITRE ATT&CK mapping
 
@@ -91,11 +94,11 @@ Browser (Investigation Interface) · Zeek logs (`conn.log`, `dce_rpc.log`, `ntlm
 The first entry in `ntlm.log` establishes the starting point: `a.novak`
 authenticating to `172.16.14.10:445` with `success=T`. Standard domain user,
 IT helpdesk, no elevated rights. This is the only credential needed to trigger
-the full chain: the attack requires nothing more than a valid domain account.
+the full chain — the attack requires nothing more than a valid domain account.
 
 A second `ntlm.log` entry immediately follows: `GHOSTJVSRGDNR$` also authenticating
 to the DC with `success=T`. The attacker used `a.novak`'s credentials to create
-a throwaway machine account: within the default `ms-DS-MachineAccountQuota`
+a throwaway machine account — within the default `ms-DS-MachineAccountQuota`
 of 10 that every domain user has by default.
 
 ### 2. The certificate request and the chase
@@ -105,19 +108,19 @@ crafted `cdc` attribute pointing to their rogue host at `172.16.14.50`. The CA,
 following its normal identity-resolution procedure, connects back to that address
 to verify the requestor's identity.
 
-This is the chase and it is the single most important signal in the capture.
+This is the chase — and it is the single most important signal in the capture.
 
 `conn.log` shows eight connections where **`172.16.14.10` (the DC/CA) is the
 originator** and `172.16.14.50:445` (the attacker workstation) is the destination.
 A Domain Controller initiating outbound SMB to a workstation is the inversion
-of normal AD traffic flow. In a healthy domain, servers authenticate clients:
+of normal AD traffic flow. In a healthy domain, servers authenticate clients —
 not the other way around.
 
 ### 3. Identity impersonation via Netlogon relay
 
 When the CA connects to the rogue SMB server, it authenticates using its own
 machine account identity. `ntlm.log` records this plainly: `DC01$` from
-`CASCADELOGISTIC` domain authenticating to `GHOSTJVSRGDNR`, the rogue server
+`CASCADELOGISTIC` domain authenticating to `GHOSTJVSRGDNR` — the rogue server
 name the attacker registered.
 
 The attacker's rogue server then relays this authentication to the real DC via
@@ -139,18 +142,18 @@ issue a certificate belonging to the Domain Controller.
 
 The attack is visible at the network layer from two angles:
 
-**Direction anomaly (`conn.log`):** `172.16.14.10` to `172.16.14.50:445`.
+**Direction anomaly (`conn.log`):** `172.16.14.10` → `172.16.14.50:445`.
 A CA or DC should never initiate SMB to a workstation. Any monitoring rule
 that alerts on a server-class host appearing as `id.orig_h` in an SMB connection
 to a non-server would have caught this.
 
 **Identity anomaly (`ntlm.log`):** `DC01$` authenticating to a host named
-`GHOSTJVSRGDNR`: a randomly generated machine account name, not a registered
+`GHOSTJVSRGDNR` — a randomly generated machine account name, not a registered
 server. The `server_nb_computer_name` field in `ntlm.log` on the DC01$ rows
 exposes the rogue server's name directly.
 
 `weird.log` adds a third signal: `netlogon_dce_rpc_auth_type=68` on every
-relay attempt: Zeek flagging an unusual Netlogon authentication type on each
+relay attempt — Zeek flagging an unusual Netlogon authentication type on each
 connection. Eight identical entries in 35 seconds.
 
 ## Key IOCs
@@ -174,20 +177,24 @@ connection. Eight identical entries in 35 seconds.
 
 2. The CA callback is the detection opportunity. A CA or DC appearing as the
    *originator* of an outbound SMB connection to a workstation is a high-fidelity
-   signal: benign AD CS enrollment always flows client to CA, never CA to client.
+   signal — benign AD CS enrollment always flows client → CA, never CA → client.
 
 3. `dce_rpc.log` is underused. The Netlogon relay sequence
-   (`NetrServerReqChallenge` to `NetrServerAuthenticate3` to `NetrLogonGetCapabilities`
-   to `NetrLogonSamLogonWithFlags`) firing eight times in 35 seconds from a
+   (`NetrServerReqChallenge` → `NetrServerAuthenticate3` → `NetrLogonGetCapabilities`
+   → `NetrLogonSamLogonWithFlags`) firing eight times in 35 seconds from a
    workstation IP is not normal domain controller behaviour. A threshold rule
    on this sequence from a non-DC source would catch the relay without tuning for
    the specific CVE.
 
+4. Randomised machine account names (`GHOSTJVSRGDNR`) are a real-world artefact
+   of automated exploit tooling. Hunting for computer accounts with names matching
+   the pattern of PoC-generated names (random uppercase strings, 12–15 chars, no
+   business context) is a cheap, high-value hunt.
 
 ## References
 
-- [Kudelski Security Certighost Advisory](https://kudelskisecurity.com/research/certighost)
-- [CVE-2026-54121 Microsoft Security Response Center](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-54121)
-- [Certighost PoC GitHub](https://github.com/aniqfakhrul/CVE-2026-54121)
-- [Kudelski Technical Analysis H0j3n Gist](https://gist.github.com/H0j3n/a5ef2609b5f2944ac2390a191a534c26)
-- [MITRE ATT&CK T1649 Steal or Forge Authentication Certificates](https://attack.mitre.org/techniques/T1649/)
+- [Kudelski Security — Certighost Advisory](https://kudelskisecurity.com/research/certighost)
+- [CVE-2026-54121 — Microsoft Security Response Center](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-54121)
+- [Certighost PoC — GitHub](https://github.com/aniqfakhrul/CVE-2026-54121)
+- [Kudelski Technical Analysis — H0j3n Gist](https://gist.github.com/H0j3n/a5ef2609b5f2944ac2390a191a534c26)
+- [MITRE ATT&CK T1649 — Steal or Forge Authentication Certificates](https://attack.mitre.org/techniques/T1649/)
