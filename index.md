@@ -1,13 +1,23 @@
 ---
-layout: page
-title: Write-ups
+layout: home
 ---
 
-<ul class="post-list">
-  {% for post in site.posts %}
-    <li>
-      <h3><a class="post-link" href="{{ post.url | relative_url }}">{{ post.title }}</a></h3>
-      {% if site.show_excerpts %}{{ post.excerpt }}{% endif %}
-    </li>
-  {% endfor %}
-</ul>
+# Labs
+
+- ### [FortiBleed 2026](https://w0xi.github.io/fortibleed-2026/)
+    *Network Forensics · Easy · Wireshark · 6 questions*
+
+- ### [Chasing Certighost's Tail](https://w0xi.github.io/chasing-certighost/)
+    *SOC · Medium · Browser · 7 questions*
+
+---
+
+# Write-ups
+
+- ### [PacketMaze: Insider Threat Network Investigation](https://w0xi.github.io/packetmaze-insider-threat-network-forensics/)
+    *CyberDefenders · Network Forensics · Insider Threat · Medium difficulty · 11/11 flags*
+
+- ### [BlackEnergy v2: Memory Forensics of a Rootkit Infection](https://w0xi.github.io/blackenergy-v2-memory-forensics/)
+    *CyberDefenders · Endpoint Forensics · Memory Analysis · Medium difficulty · 8/8 flags*
+
+Memory forensics, network forensics, incident analysis.
