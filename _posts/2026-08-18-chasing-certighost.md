@@ -6,7 +6,7 @@ categories: [soc]
 tags: [zeek, active-directory, adcs, certighost, cve-2026-54121, netlogon]
 ---
 
-*SOC · Medium · Browser (HTML) · 7 questions*
+*SOC · Medium · SOC Interface · 7 questions*
 
 SOC investigation lab built on CVE-2026-54121 (Certighost), a critical
 Active Directory Certificate Services flaw patched in July 2026. The lab
