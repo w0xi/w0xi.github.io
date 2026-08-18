@@ -13,7 +13,7 @@ title: ""
 
 ---
 
-# Write-ups
+# CTFs
 
 - ### [PacketMaze: Insider Threat Network Investigation](https://w0xi.github.io/packetmaze-insider-threat-network-forensics/)
     *CyberDefenders · Network Forensics · Insider Threat · Medium difficulty · 11/11 flags*
