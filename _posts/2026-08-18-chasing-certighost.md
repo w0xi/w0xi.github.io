@@ -18,7 +18,7 @@ from Zeek network sensor logs.
 
 | | |
 |---|---|
-| Artifact | `Zeek Logs and .pcap` |
+| Artifacts | `Zeek Logs and .pcap` |
 | DC / CA | `172.16.14.10` |
 | Attacker workstation | `172.16.14.50` |
 | Launching account | `a.novak` (low-privilege, IT helpdesk) |
