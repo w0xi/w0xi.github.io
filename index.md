@@ -20,5 +20,3 @@ title: ""
 
 - ### [BlackEnergy v2: Memory Forensics of a Rootkit Infection](https://w0xi.github.io/blackenergy-v2-memory-forensics/)
     *CyberDefenders · Endpoint Forensics · Memory Analysis · Medium difficulty · 8/8 flags*
-
-Memory forensics, network forensics, incident analysis.
