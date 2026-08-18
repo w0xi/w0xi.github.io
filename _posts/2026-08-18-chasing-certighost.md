@@ -57,7 +57,7 @@ open it in any browser, no setup required.
 
 ## Investigation interface
 
-<a href="https://w0xi.github.io/certighost/sensors.html" style="display:inline-block;padding:10px 20px;background:#2d2d2d;color:#fff;text-decoration:none;border-radius:4px;font-family:monospace;">Open Investigation →</a>
+<a href="https://w0xi.github.io/certighost/sensors.html" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:10px 20px;background:#2d2d2d;color:#fff;text-decoration:none;border-radius:4px;font-family:monospace;">Open Investigation →</a>
 
 All seven Zeek log types are pre-loaded. No setup, no downloads, open in any browser.
 
