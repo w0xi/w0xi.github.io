@@ -18,7 +18,7 @@ from Zeek network sensor logs.
 
 | | |
 |---|---|
-| Artifacts | `Zeek Logs and .pcap` |
+| Artifacts | `Zeek logs and .pcap` |
 | DC / CA | `172.16.14.10` |
 | Attacker workstation | `172.16.14.50` |
 | Launching account | `a.novak` (low-privilege, IT helpdesk) |
@@ -76,7 +76,6 @@ For packet-level analysis: [`certighost_final.pcap`](https://github.com/w0xi/w0x
 4. During the chase, the CA authenticated to the attacker's rogue SMB server. What account identity did it present, and what does this reveal about the attacker's goal?
 5. `dce_rpc.log` records the full Netlogon relay sequence. List all four operations in the order they appear.
 6. What is the NetBIOS computer name of the rogue SMB server the CA connected to?
-7. Write a plain-language detection rule that would catch this attack at the network layer, based only on what you observe in `conn.log` and `ntlm.log`. Your rule must be specific enough not to fire on benign AD CS enrollment traffic.
 
 ## Walkthrough
 
