@@ -63,9 +63,6 @@ All seven Zeek log types are pre-loaded. No setup, no downloads, open in any bro
 
 For packet-level analysis: [`certighost_final.pcap`](https://github.com/w0xi/w0xi.github.io/releases/download/v1.0/certighost_final.pcap) (optional — not required for any question)
 
-## Tools
-
-Browser (HTML investigation interface) · Zeek logs (`conn.log`, `dce_rpc.log`, `ntlm.log`)
 
 ## MITRE ATT&CK mapping
 
