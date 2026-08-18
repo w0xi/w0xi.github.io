@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Network Sensor Logs</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #1a1a1a;
+    color: #d0d0d0;
+    font-family: monospace;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  #header {
+    background: #111;
+    border-bottom: 1px solid #333;
+    padding: 12px 20px;
+    display: flex;
+    align-items: baseline;
+    gap: 20px;
+  }
+  #header h1 {
+    font-size: 14px;
+    font-weight: normal;
+    color: #aaa;
+    letter-spacing: 0.03em;
+  }
+  #header .meta {
+    font-size: 12px;
+    color: #555;
+  }
+  #toolbar {
+    background: #111;
+    border-bottom: 1px solid #2a2a2a;
+    padding: 8px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  #search {
+    background: #222;
+    border: 1px solid #333;
+    color: #d0d0d0;
+    padding: 5px 10px;
+    font-family: monospace;
+    font-size: 12px;
+    width: 280px;
+    outline: none;
+  }
+  #search:focus { border-color: #555; }
+  #search::placeholder { color: #444; }
+  .filter-label {
+    color: #555;
+    font-size: 12px;
+  }
+  select {
+    background: #222;
+    border: 1px solid #333;
+    color: #d0d0d0;
+    padding: 5px 8px;
+    font-family: monospace;
+    font-size: 12px;
+    outline: none;
+    cursor: pointer;
+  }
+  #clear-btn {
+    background: none;
+    border: 1px solid #333;
+    color: #666;
+    padding: 5px 10px;
+    font-family: monospace;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  #clear-btn:hover { color: #aaa; border-color: #555; }
+  #tabs {
+    background: #111;
+    border-bottom: 1px solid #2a2a2a;
+    padding: 0 20px;
+    display: flex;
+    gap: 0;
+  }
+  .tab {
+    padding: 8px 16px;
+    font-family: monospace;
+    font-size: 12px;
+    color: #555;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    user-select: none;
+  }
+  .tab:hover { color: #999; }
+  .tab.active { color: #d0d0d0; border-bottom-color: #666; }
+  .tab .count {
+    font-size: 10px;
+    color: #444;
+    margin-left: 5px;
+  }
+  .tab.active .count { color: #666; }
+  #content {
+    padding: 16px 20px;
+    overflow-x: auto;
+  }
+  #result-count {
+    font-size: 11px;
+    color: #555;
+    margin-bottom: 8px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  th {
+    text-align: left;
+    padding: 6px 10px;
+    background: #111;
+    color: #777;
+    font-weight: normal;
+    border-bottom: 1px solid #2a2a2a;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+  }
+  td {
+    padding: 5px 10px;
+    border-bottom: 1px solid #222;
+    white-space: nowrap;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: top;
+  }
+  tr:hover td { background: #222; }
+  .ts { color: #666; }
+  .highlight { background: #2a2a1a !important; }
+  .tag-attacker { color: #c0392b; }
+  .tag-server { color: #7f8c8d; }
+  .tag-chase { color: #e67e22; }
+  .tag-success { color: #27ae60; }
+  .tag-fail { color: #c0392b; }
+  #no-results {
+    color: #444;
+    padding: 20px 0;
+    font-size: 12px;
+  }
+  .field-note {
+    font-size: 11px;
+    color: #444;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1>Network Sensor Logs</h1>
+  <span class="meta">Capture window: 2026-08-16 23:29 – 23:30 UTC &nbsp;|&nbsp; Sensor: 172.16.14.2 &nbsp;|&nbsp; Zeek 6.x</span>
+</div>
+
+<div id="toolbar">
+  <span class="filter-label">Search:</span>
+  <input id="search" type="text" placeholder="filter across all fields..." autocomplete="off" spellcheck="false">
+  <span class="filter-label">src IP:</span>
+  <select id="src-filter">
+    <option value="">all</option>
+    <option value="172.16.14.50">172.16.14.50</option>
+    <option value="172.16.14.10">172.16.14.10</option>
+  </select>
+  <span class="filter-label">dst IP:</span>
+  <select id="dst-filter">
+    <option value="">all</option>
+    <option value="172.16.14.50">172.16.14.50</option>
+    <option value="172.16.14.10">172.16.14.10</option>
+  </select>
+  <button id="clear-btn">clear</button>
+  <span class="filter-label" style="margin-left:auto;">
+    172.16.14.10 = DC01/CA &nbsp;|&nbsp; 172.16.14.50 = workstation
+  </span>
+</div>
+
+<div id="tabs">
+  <div class="tab active" data-tab="conn">conn <span class="count"></span></div>
+  <div class="tab" data-tab="dce_rpc">dce_rpc <span class="count"></span></div>
+  <div class="tab" data-tab="ntlm">ntlm <span class="count"></span></div>
+  <div class="tab" data-tab="dns">dns <span class="count"></span></div>
+  <div class="tab" data-tab="ssl">ssl <span class="count"></span></div>
+  <div class="tab" data-tab="weird">weird <span class="count"></span></div>
+  <div class="tab" data-tab="x509">x509 <span class="count"></span></div>
+</div>
+
+<div id="content">
+  <div id="result-count"></div>
+  <div id="table-container"></div>
+  <div id="no-results" style="display:none">No matching records.</div>
+</div>
+
+<script>
+const DATA = {"conn": {"fields": ["ts", "uid", "id.orig_h", "id.orig_p", "id.resp_h", "id.resp_p", "proto", "service", "duration", "orig_bytes", "resp_bytes", "conn_state", "local_orig", "local_resp", "missed_bytes", "history", "orig_pkts", "orig_ip_bytes", "resp_pkts", "resp_ip_bytes", "tunnel_parents", "ip_proto"], "rows": [{"ts": "1786940967.722481", "uid": "CFH5Ag4JKKE5mVA7Sc", "id.orig_h": "172.16.14.50", "id.orig_p": "55988", "id.resp_h": "172.16.14.10", "id.resp_p": "135", "proto": "tcp", "service": "dce_rpc", "duration": "0.011081", "orig_bytes": "232", "resp_bytes": "224", "conn_state": "SF", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADdFaf", "orig_pkts": "7", "orig_ip_bytes": "604", "resp_pkts": "5", "resp_ip_bytes": "492", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940967.733658", "uid": "ChUGFb3IGuzAQZHSF4", "id.orig_h": "172.16.14.50", "id.orig_p": "48018", "id.resp_h": "172.16.14.10", "id.resp_p": "445", "proto": "tcp", "service": "gssapi,smb,ntlm", "duration": "0.233019", "orig_bytes": "8159", "resp_bytes": "6514", "conn_state": "RSTR", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADdar", "orig_pkts": "42", "orig_ip_bytes": "10351", "resp_pkts": "41", "resp_ip_bytes": "8642", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940969.214746", "uid": "C4ZYi32NT57Mpn0H74", "id.orig_h": "172.16.14.50", "id.orig_p": "56000", "id.resp_h": "172.16.14.10", "id.resp_p": "135", "proto": "tcp", "service": "dce_rpc", "duration": "0.010148", "orig_bytes": "228", "resp_bytes": "300", "conn_state": "SF", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADdFaf", "orig_pkts": "7", "orig_ip_bytes": "600", "resp_pkts": "5", "resp_ip_bytes": "568", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940969.194076", "uid": "CfPsrpU6nEoiRyppb", "id.orig_h": "172.16.14.10", "id.orig_p": "49733", "id.resp_h": "172.16.14.50", "id.resp_p": "445", "proto": "tcp", "service": "gssapi,smb,ntlm", "duration": "0.071108", "orig_bytes": "1148", "resp_bytes": "732", "conn_state": "RSTO", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADadfR", "orig_pkts": "8", "orig_ip_bytes": "1480", "resp_pkts": "7", "resp_ip_bytes": "1024", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940969.284911", "uid": "C9sMbF3iArLRgAH5P9", "id.orig_h": "172.16.14.50", "id.orig_p": "56008", "id.resp_h": "172.16.14.10", "id.resp_p": "135", "proto": "tcp", "service": "dce_rpc", "duration": "0.012627", "orig_bytes": "228", "resp_bytes": "300", "conn_state": "SF", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADdFaf", "orig_pkts": "7", "orig_ip_bytes": "600", "resp_pkts": "5", "resp_ip_bytes": "568", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940969.266136", "uid": "CPeUmoeEUNuXVdjdi", "id.orig_h": "172.16.14.10", "id.orig_p": "49734", "id.resp_h": "172.16.14.50", "id.resp_p": "445", "proto": "tcp", "service": "gssapi,ntlm,smb", "duration": "0.066487", "orig_bytes": "1075", "resp_bytes": "568", "conn_state": "RSTO", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADadfR", "orig_pkts": "7", "orig_ip_bytes": "1367", "resp_pkts": "6", "resp_ip_bytes": "820", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940969.353629", "uid": "CjBuS816LGBoAYpli5", "id.orig_h": "172.16.14.50", "id.orig_p": "56018", "id.resp_h": "172.16.14.10", "id.resp_p": "135", "proto": "tcp", "service": "dce_rpc", "duration": "0.010533", "orig_bytes": "228", "resp_bytes": "300", "conn_state": "SF", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADdFaf", "orig_pkts": "7", "orig_ip_bytes": "600", "resp_pkts": "5", "resp_ip_bytes": "568", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940969.297539", "uid": "CMKauN31AWz099rCP1", "id.orig_h": "172.16.14.50", "id.orig_p": "33982", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "proto": "tcp", "service": "dce_rpc", "duration": "0.096250", "orig_bytes": "1281", "resp_bytes": "472", "conn_state": "SF", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADdFaf", "orig_pkts": "12", "orig_ip_bytes": "1913", "resp_pkts": "9", "resp_ip_bytes": "948", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940969.224893", "uid": "Cjrmv93QGUfk3YpH9j", "id.orig_h": "172.16.14.50", "id.orig_p": "33970", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "proto": "tcp", "service": "dce_rpc", "duration": "0.168897", "orig_bytes": "1281", "resp_bytes": "472", "conn_state": "SF", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADdFaf", "orig_pkts": "12", "orig_ip_bytes": "1913", "resp_pkts": "9", "resp_ip_bytes": "948", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940969.334713", "uid": "CXc8OF37wX6ANa2mlj", "id.orig_h": "172.16.14.10", "id.orig_p": "49735", "id.resp_h": "172.16.14.50", "id.resp_p": "445", "proto": "tcp", "service": "gssapi,ntlm,smb", "duration": "0.065472", "orig_bytes": "1075", "resp_bytes": "568", "conn_state": "RSTO", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADadfR", "orig_pkts": "7", "orig_ip_bytes": "1367", "resp_pkts": "6", "resp_ip_bytes": "820", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940969.422030", "uid": "CW7lel3KRg0JvhF1yd", "id.orig_h": "172.16.14.50", "id.orig_p": "56034", "id.resp_h": "172.16.14.10", "id.resp_p": "135", "proto": "tcp", "service": "dce_rpc", "duration": "0.010419", "orig_bytes": "228", "resp_bytes": "300", "conn_state": "SF", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADdFaf", "orig_pkts": "7", "orig_ip_bytes": "600", "resp_pkts": "5", "resp_ip_bytes": "568", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940969.401373", "uid": "CetdYw1bQFEPpJuVd7", "id.orig_h": "172.16.14.10", "id.orig_p": "49736", "id.resp_h": "172.16.14.50", "id.resp_p": "445", "proto": "tcp", "service": "gssapi,ntlm,smb", "duration": "0.065358", "orig_bytes": "1075", "resp_bytes": "568", "conn_state": "RSTO", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADadfR", "orig_pkts": "7", "orig_ip_bytes": "1367", "resp_pkts": "6", "resp_ip_bytes": "820", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940969.484877", "uid": "Cc5NwP1SeGrZTqBEhg", "id.orig_h": "172.16.14.50", "id.orig_p": "56036", "id.resp_h": "172.16.14.10", "id.resp_p": "135", "proto": "tcp", "service": "dce_rpc", "duration": "0.010317", "orig_bytes": "228", "resp_bytes": "300", "conn_state": "SF", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADdFaf", "orig_pkts": "7", "orig_ip_bytes": "600", "resp_pkts": "5", "resp_ip_bytes": "568", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940969.467728", "uid": "C26LrT15V1imNsqsij", "id.orig_h": "172.16.14.10", "id.orig_p": "49737", "id.resp_h": "172.16.14.50", "id.resp_p": "445", "proto": "tcp", "service": "gssapi,ntlm,smb", "duration": "0.062719", "orig_bytes": "1075", "resp_bytes": "568", "conn_state": "RSTO", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADadfR", "orig_pkts": "7", "orig_ip_bytes": "1367", "resp_pkts": "6", "resp_ip_bytes": "820", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940969.548225", "uid": "C2HT4q3G5bqUd4g0t", "id.orig_h": "172.16.14.50", "id.orig_p": "56052", "id.resp_h": "172.16.14.10", "id.resp_p": "135", "proto": "tcp", "service": "dce_rpc", "duration": "0.012686", "orig_bytes": "228", "resp_bytes": "300", "conn_state": "SF", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADdFaf", "orig_pkts": "7", "orig_ip_bytes": "600", "resp_pkts": "5", "resp_ip_bytes": "568", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940969.531686", "uid": "CnxfXuyIXUXLJ1GFj", "id.orig_h": "172.16.14.10", "id.orig_p": "49738", "id.resp_h": "172.16.14.50", "id.resp_p": "445", "proto": "tcp", "service": "gssapi,ntlm,smb", "duration": "0.064525", "orig_bytes": "1075", "resp_bytes": "568", "conn_state": "RSTO", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADadfR", "orig_pkts": "7", "orig_ip_bytes": "1367", "resp_pkts": "6", "resp_ip_bytes": "820", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940969.613696", "uid": "CDNTCV28YMeUUKfUr1", "id.orig_h": "172.16.14.50", "id.orig_p": "56060", "id.resp_h": "172.16.14.10", "id.resp_p": "135", "proto": "tcp", "service": "dce_rpc", "duration": "0.010141", "orig_bytes": "228", "resp_bytes": "300", "conn_state": "SF", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADdFaf", "orig_pkts": "7", "orig_ip_bytes": "600", "resp_pkts": "5", "resp_ip_bytes": "568", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940969.494952", "uid": "CMzoAf2ijSiKOE2JHe", "id.orig_h": "172.16.14.50", "id.orig_p": "33996", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "proto": "tcp", "service": "dce_rpc", "duration": "0.159303", "orig_bytes": "1281", "resp_bytes": "472", "conn_state": "SF", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADdFaf", "orig_pkts": "12", "orig_ip_bytes": "1913", "resp_pkts": "9", "resp_ip_bytes": "948", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940969.432349", "uid": "C67rce3SDxcSSJ0yPd", "id.orig_h": "172.16.14.50", "id.orig_p": "33994", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "proto": "tcp", "service": "dce_rpc", "duration": "0.221907", "orig_bytes": "1281", "resp_bytes": "472", "conn_state": "SF", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADdFaf", "orig_pkts": "12", "orig_ip_bytes": "1913", "resp_pkts": "9", "resp_ip_bytes": "948", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940969.560910", "uid": "CAwJUA3CUYlgWKMb9e", "id.orig_h": "172.16.14.50", "id.orig_p": "34006", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "proto": "tcp", "service": "dce_rpc", "duration": "0.093924", "orig_bytes": "1281", "resp_bytes": "472", "conn_state": "SF", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADdFaf", "orig_pkts": "12", "orig_ip_bytes": "1913", "resp_pkts": "9", "resp_ip_bytes": "948", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940969.364160", "uid": "CAv5ey263sTDalQvZi", "id.orig_h": "172.16.14.50", "id.orig_p": "33986", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "proto": "tcp", "service": "dce_rpc", "duration": "0.291259", "orig_bytes": "1281", "resp_bytes": "472", "conn_state": "SF", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADdFaf", "orig_pkts": "12", "orig_ip_bytes": "1913", "resp_pkts": "9", "resp_ip_bytes": "948", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940969.597245", "uid": "C28PPKyxY4cBlNLm3", "id.orig_h": "172.16.14.10", "id.orig_p": "49739", "id.resp_h": "172.16.14.50", "id.resp_p": "445", "proto": "tcp", "service": "gssapi,ntlm,smb", "duration": "0.065693", "orig_bytes": "1075", "resp_bytes": "568", "conn_state": "RSTO", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADadfR", "orig_pkts": "7", "orig_ip_bytes": "1367", "resp_pkts": "6", "resp_ip_bytes": "820", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940969.684592", "uid": "CpMECCapUSmo2IdKf", "id.orig_h": "172.16.14.50", "id.orig_p": "56074", "id.resp_h": "172.16.14.10", "id.resp_p": "135", "proto": "tcp", "service": "dce_rpc", "duration": "0.010201", "orig_bytes": "228", "resp_bytes": "300", "conn_state": "SF", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADdFaf", "orig_pkts": "7", "orig_ip_bytes": "600", "resp_pkts": "5", "resp_ip_bytes": "568", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940969.665002", "uid": "CkzDmMOT3Zlh54zV4", "id.orig_h": "172.16.14.10", "id.orig_p": "49740", "id.resp_h": "172.16.14.50", "id.resp_p": "445", "proto": "tcp", "service": "gssapi,ntlm,smb", "duration": "0.065698", "orig_bytes": "1075", "resp_bytes": "568", "conn_state": "RSTO", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADadfR", "orig_pkts": "7", "orig_ip_bytes": "1367", "resp_pkts": "6", "resp_ip_bytes": "820", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940954.928762", "uid": "CZ4rxd28JrN3sn9rf5", "id.orig_h": "172.16.14.50", "id.orig_p": "51344", "id.resp_h": "172.16.14.10", "id.resp_p": "636", "proto": "tcp", "service": "ssl", "duration": "14.814960", "orig_bytes": "3584", "resp_bytes": "45677", "conn_state": "RSTR", "local_orig": "T", "local_resp": "T", "missed_bytes": "40126", "history": "ShADadgtFr", "orig_pkts": "18", "orig_ip_bytes": "4540", "resp_pkts": "17", "resp_ip_bytes": "48005", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940969.694791", "uid": "CoYVGC3tohiPfIKIU3", "id.orig_h": "172.16.14.50", "id.orig_p": "34018", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "proto": "tcp", "service": "dce_rpc", "duration": "0.094906", "orig_bytes": "1281", "resp_bytes": "472", "conn_state": "SF", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADdFaf", "orig_pkts": "12", "orig_ip_bytes": "1913", "resp_pkts": "9", "resp_ip_bytes": "948", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940969.623839", "uid": "CJPYC425YVH9sPH1yh", "id.orig_h": "172.16.14.50", "id.orig_p": "34012", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "proto": "tcp", "service": "dce_rpc", "duration": "0.167648", "orig_bytes": "1281", "resp_bytes": "472", "conn_state": "SF", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADdFaf", "orig_pkts": "12", "orig_ip_bytes": "1913", "resp_pkts": "9", "resp_ip_bytes": "948", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940969.100023", "uid": "CdUNPp2HHZsgwcx8r8", "id.orig_h": "172.16.14.50", "id.orig_p": "48030", "id.resp_h": "172.16.14.10", "id.resp_p": "445", "proto": "tcp", "service": "gssapi,smb,ntlm", "duration": "0.691465", "orig_bytes": "3897", "resp_bytes": "2736", "conn_state": "RSTR", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "ShADdFar", "orig_pkts": "17", "orig_ip_bytes": "4789", "resp_pkts": "15", "resp_ip_bytes": "3512", "tunnel_parents": "-", "ip_proto": "6"}, {"ts": "1786940967.488647", "uid": "CncJJr3Lom1seGle2l", "id.orig_h": "172.16.14.50", "id.orig_p": "47342", "id.resp_h": "172.16.14.10", "id.resp_p": "53", "proto": "udp", "service": "dns", "duration": "0.000385", "orig_bytes": "45", "resp_bytes": "61", "conn_state": "SF", "local_orig": "T", "local_resp": "T", "missed_bytes": "0", "history": "Dd", "orig_pkts": "1", "orig_ip_bytes": "73", "resp_pkts": "1", "resp_ip_bytes": "89", "tunnel_parents": "-", "ip_proto": "17"}]}, "dce_rpc": {"fields": ["ts", "uid", "id.orig_h", "id.orig_p", "id.resp_h", "id.resp_p", "rtt", "named_pipe", "endpoint", "operation"], "rows": [{"ts": "1786940967.728324", "uid": "CFH5Ag4JKKE5mVA7Sc", "id.orig_h": "172.16.14.50", "id.orig_p": "55988", "id.resp_h": "172.16.14.10", "id.resp_p": "135", "rtt": "0.000684", "named_pipe": "135", "endpoint": "epmapper", "operation": "ept_map"}, {"ts": "1786940969.220775", "uid": "C4ZYi32NT57Mpn0H74", "id.orig_h": "172.16.14.50", "id.orig_p": "56000", "id.resp_h": "172.16.14.10", "id.resp_p": "135", "rtt": "0.000329", "named_pipe": "135", "endpoint": "epmapper", "operation": "ept_map"}, {"ts": "1786940969.229936", "uid": "Cjrmv93QGUfk3YpH9j", "id.orig_h": "172.16.14.50", "id.orig_p": "33970", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.000340", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrServerReqChallenge"}, {"ts": "1786940969.233386", "uid": "Cjrmv93QGUfk3YpH9j", "id.orig_h": "172.16.14.50", "id.orig_p": "33970", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.002047", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrServerAuthenticate3"}, {"ts": "1786940969.244314", "uid": "Cjrmv93QGUfk3YpH9j", "id.orig_h": "172.16.14.50", "id.orig_p": "33970", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.000426", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrLogonGetCapabilities"}, {"ts": "1786940969.251900", "uid": "Cjrmv93QGUfk3YpH9j", "id.orig_h": "172.16.14.50", "id.orig_p": "33970", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.000003", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrLogonSamLogonWithFlags"}, {"ts": "1786940969.292650", "uid": "C9sMbF3iArLRgAH5P9", "id.orig_h": "172.16.14.50", "id.orig_p": "56008", "id.resp_h": "172.16.14.10", "id.resp_p": "135", "rtt": "0.000661", "named_pipe": "135", "endpoint": "epmapper", "operation": "ept_map"}, {"ts": "1786940969.302553", "uid": "CMKauN31AWz099rCP1", "id.orig_h": "172.16.14.50", "id.orig_p": "33982", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.000439", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrServerReqChallenge"}, {"ts": "1786940969.306047", "uid": "CMKauN31AWz099rCP1", "id.orig_h": "172.16.14.50", "id.orig_p": "33982", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.001025", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrServerAuthenticate3"}, {"ts": "1786940969.315585", "uid": "CMKauN31AWz099rCP1", "id.orig_h": "172.16.14.50", "id.orig_p": "33982", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.000435", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrLogonGetCapabilities"}, {"ts": "1786940969.323065", "uid": "CMKauN31AWz099rCP1", "id.orig_h": "172.16.14.50", "id.orig_p": "33982", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.000590", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrLogonSamLogonWithFlags"}, {"ts": "1786940969.360126", "uid": "CjBuS816LGBoAYpli5", "id.orig_h": "172.16.14.50", "id.orig_p": "56018", "id.resp_h": "172.16.14.10", "id.resp_p": "135", "rtt": "0.000908", "named_pipe": "135", "endpoint": "epmapper", "operation": "ept_map"}, {"ts": "1786940969.369328", "uid": "CAv5ey263sTDalQvZi", "id.orig_h": "172.16.14.50", "id.orig_p": "33986", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.000398", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrServerReqChallenge"}, {"ts": "1786940969.373427", "uid": "CAv5ey263sTDalQvZi", "id.orig_h": "172.16.14.50", "id.orig_p": "33986", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.000003", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrServerAuthenticate3"}, {"ts": "1786940969.381581", "uid": "CAv5ey263sTDalQvZi", "id.orig_h": "172.16.14.50", "id.orig_p": "33986", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.000402", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrLogonGetCapabilities"}, {"ts": "1786940969.388705", "uid": "CAv5ey263sTDalQvZi", "id.orig_h": "172.16.14.50", "id.orig_p": "33986", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.000503", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrLogonSamLogonWithFlags"}, {"ts": "1786940969.428183", "uid": "CW7lel3KRg0JvhF1yd", "id.orig_h": "172.16.14.50", "id.orig_p": "56034", "id.resp_h": "172.16.14.10", "id.resp_p": "135", "rtt": "0.000338", "named_pipe": "135", "endpoint": "epmapper", "operation": "ept_map"}, {"ts": "1786940969.437657", "uid": "C67rce3SDxcSSJ0yPd", "id.orig_h": "172.16.14.50", "id.orig_p": "33994", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.000345", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrServerReqChallenge"}, {"ts": "1786940969.440765", "uid": "C67rce3SDxcSSJ0yPd", "id.orig_h": "172.16.14.50", "id.orig_p": "33994", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.001127", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrServerAuthenticate3"}, {"ts": "1786940969.450014", "uid": "C67rce3SDxcSSJ0yPd", "id.orig_h": "172.16.14.50", "id.orig_p": "33994", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.000394", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrLogonGetCapabilities"}, {"ts": "1786940969.456968", "uid": "C67rce3SDxcSSJ0yPd", "id.orig_h": "172.16.14.50", "id.orig_p": "33994", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.000515", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrLogonSamLogonWithFlags"}, {"ts": "1786940969.490831", "uid": "Cc5NwP1SeGrZTqBEhg", "id.orig_h": "172.16.14.50", "id.orig_p": "56036", "id.resp_h": "172.16.14.10", "id.resp_p": "135", "rtt": "0.000321", "named_pipe": "135", "endpoint": "epmapper", "operation": "ept_map"}, {"ts": "1786940969.500177", "uid": "CMzoAf2ijSiKOE2JHe", "id.orig_h": "172.16.14.50", "id.orig_p": "33996", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.000275", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrServerReqChallenge"}, {"ts": "1786940969.504297", "uid": "CMzoAf2ijSiKOE2JHe", "id.orig_h": "172.16.14.50", "id.orig_p": "33996", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.000003", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrServerAuthenticate3"}, {"ts": "1786940969.512692", "uid": "CMzoAf2ijSiKOE2JHe", "id.orig_h": "172.16.14.50", "id.orig_p": "33996", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.000431", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrLogonGetCapabilities"}, {"ts": "1786940969.519741", "uid": "CMzoAf2ijSiKOE2JHe", "id.orig_h": "172.16.14.50", "id.orig_p": "33996", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.001539", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrLogonSamLogonWithFlags"}, {"ts": "1786940969.554350", "uid": "C2HT4q3G5bqUd4g0t", "id.orig_h": "172.16.14.50", "id.orig_p": "56052", "id.resp_h": "172.16.14.10", "id.resp_p": "135", "rtt": "0.000004", "named_pipe": "135", "endpoint": "epmapper", "operation": "ept_map"}, {"ts": "1786940969.566906", "uid": "CAwJUA3CUYlgWKMb9e", "id.orig_h": "172.16.14.50", "id.orig_p": "34006", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.000201", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrServerReqChallenge"}, {"ts": "1786940969.569908", "uid": "CAwJUA3CUYlgWKMb9e", "id.orig_h": "172.16.14.50", "id.orig_p": "34006", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.001133", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrServerAuthenticate3"}, {"ts": "1786940969.579259", "uid": "CAwJUA3CUYlgWKMb9e", "id.orig_h": "172.16.14.50", "id.orig_p": "34006", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.000259", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrLogonGetCapabilities"}, {"ts": "1786940969.586046", "uid": "CAwJUA3CUYlgWKMb9e", "id.orig_h": "172.16.14.50", "id.orig_p": "34006", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.000547", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrLogonSamLogonWithFlags"}, {"ts": "1786940969.619587", "uid": "CDNTCV28YMeUUKfUr1", "id.orig_h": "172.16.14.50", "id.orig_p": "56060", "id.resp_h": "172.16.14.10", "id.resp_p": "135", "rtt": "0.000497", "named_pipe": "135", "endpoint": "epmapper", "operation": "ept_map"}, {"ts": "1786940969.628770", "uid": "CJPYC425YVH9sPH1yh", "id.orig_h": "172.16.14.50", "id.orig_p": "34012", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.000357", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrServerReqChallenge"}, {"ts": "1786940969.631960", "uid": "CJPYC425YVH9sPH1yh", "id.orig_h": "172.16.14.50", "id.orig_p": "34012", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.001101", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrServerAuthenticate3"}, {"ts": "1786940969.641244", "uid": "CJPYC425YVH9sPH1yh", "id.orig_h": "172.16.14.50", "id.orig_p": "34012", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.000416", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrLogonGetCapabilities"}, {"ts": "1786940969.648429", "uid": "CJPYC425YVH9sPH1yh", "id.orig_h": "172.16.14.50", "id.orig_p": "34012", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.000443", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrLogonSamLogonWithFlags"}, {"ts": "1786940969.690566", "uid": "CpMECCapUSmo2IdKf", "id.orig_h": "172.16.14.50", "id.orig_p": "56074", "id.resp_h": "172.16.14.10", "id.resp_p": "135", "rtt": "0.000427", "named_pipe": "135", "endpoint": "epmapper", "operation": "ept_map"}, {"ts": "1786940969.699769", "uid": "CoYVGC3tohiPfIKIU3", "id.orig_h": "172.16.14.50", "id.orig_p": "34018", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.000305", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrServerReqChallenge"}, {"ts": "1786940969.702856", "uid": "CoYVGC3tohiPfIKIU3", "id.orig_h": "172.16.14.50", "id.orig_p": "34018", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.001178", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrServerAuthenticate3"}, {"ts": "1786940969.712323", "uid": "CoYVGC3tohiPfIKIU3", "id.orig_h": "172.16.14.50", "id.orig_p": "34018", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.000377", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrLogonGetCapabilities"}, {"ts": "1786940969.719233", "uid": "CoYVGC3tohiPfIKIU3", "id.orig_h": "172.16.14.50", "id.orig_p": "34018", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "rtt": "0.000476", "named_pipe": "49668", "endpoint": "netlogon", "operation": "NetrLogonSamLogonWithFlags"}]}, "ntlm": {"fields": ["ts", "uid", "id.orig_h", "id.orig_p", "id.resp_h", "id.resp_p", "username", "hostname", "domainname", "server_nb_computer_name", "server_dns_computer_name", "server_tree_name", "success"], "rows": [{"ts": "1786940967.743795", "uid": "ChUGFb3IGuzAQZHSF4", "id.orig_h": "172.16.14.50", "id.orig_p": "48018", "id.resp_h": "172.16.14.10", "id.resp_p": "445", "username": "a.novak", "hostname": "-", "domainname": "cascadelogistics.local", "server_nb_computer_name": "DC01", "server_dns_computer_name": "DC01.cascadelogistics.local", "server_tree_name": "cascadelogistics.local", "success": "T"}, {"ts": "1786940969.109539", "uid": "CdUNPp2HHZsgwcx8r8", "id.orig_h": "172.16.14.50", "id.orig_p": "48030", "id.resp_h": "172.16.14.10", "id.resp_p": "445", "username": "GHOSTJVSRGDNR$", "hostname": "-", "domainname": "cascadelogistics.local", "server_nb_computer_name": "DC01", "server_dns_computer_name": "DC01.cascadelogistics.local", "server_tree_name": "cascadelogistics.local", "success": "T"}, {"ts": "1786940969.206473", "uid": "CfPsrpU6nEoiRyppb", "id.orig_h": "172.16.14.10", "id.orig_p": "49733", "id.resp_h": "172.16.14.50", "id.resp_p": "445", "username": "DC01$", "hostname": "DC01", "domainname": "CASCADELOGISTIC", "server_nb_computer_name": "GHOSTJVSRGDNR", "server_dns_computer_name": "GHOSTJVSRGDNR", "server_tree_name": "-", "success": "-"}, {"ts": "1786940969.275350", "uid": "CPeUmoeEUNuXVdjdi", "id.orig_h": "172.16.14.10", "id.orig_p": "49734", "id.resp_h": "172.16.14.50", "id.resp_p": "445", "username": "DC01$", "hostname": "DC01", "domainname": "CASCADELOGISTIC", "server_nb_computer_name": "GHOSTJVSRGDNR", "server_dns_computer_name": "GHOSTJVSRGDNR", "server_tree_name": "-", "success": "-"}, {"ts": "1786940969.344375", "uid": "CXc8OF37wX6ANa2mlj", "id.orig_h": "172.16.14.10", "id.orig_p": "49735", "id.resp_h": "172.16.14.50", "id.resp_p": "445", "username": "DC01$", "hostname": "DC01", "domainname": "CASCADELOGISTIC", "server_nb_computer_name": "GHOSTJVSRGDNR", "server_dns_computer_name": "GHOSTJVSRGDNR", "server_tree_name": "-", "success": "-"}, {"ts": "1786940969.412144", "uid": "CetdYw1bQFEPpJuVd7", "id.orig_h": "172.16.14.10", "id.orig_p": "49736", "id.resp_h": "172.16.14.50", "id.resp_p": "445", "username": "DC01$", "hostname": "DC01", "domainname": "CASCADELOGISTIC", "server_nb_computer_name": "GHOSTJVSRGDNR", "server_dns_computer_name": "GHOSTJVSRGDNR", "server_tree_name": "-", "success": "-"}, {"ts": "1786940969.475550", "uid": "C26LrT15V1imNsqsij", "id.orig_h": "172.16.14.10", "id.orig_p": "49737", "id.resp_h": "172.16.14.50", "id.resp_p": "445", "username": "DC01$", "hostname": "DC01", "domainname": "CASCADELOGISTIC", "server_nb_computer_name": "GHOSTJVSRGDNR", "server_dns_computer_name": "GHOSTJVSRGDNR", "server_tree_name": "-", "success": "-"}, {"ts": "1786940969.539369", "uid": "CnxfXuyIXUXLJ1GFj", "id.orig_h": "172.16.14.10", "id.orig_p": "49738", "id.resp_h": "172.16.14.50", "id.resp_p": "445", "username": "DC01$", "hostname": "DC01", "domainname": "CASCADELOGISTIC", "server_nb_computer_name": "GHOSTJVSRGDNR", "server_dns_computer_name": "GHOSTJVSRGDNR", "server_tree_name": "-", "success": "-"}, {"ts": "1786940969.604806", "uid": "C28PPKyxY4cBlNLm3", "id.orig_h": "172.16.14.10", "id.orig_p": "49739", "id.resp_h": "172.16.14.50", "id.resp_p": "445", "username": "DC01$", "hostname": "DC01", "domainname": "CASCADELOGISTIC", "server_nb_computer_name": "GHOSTJVSRGDNR", "server_dns_computer_name": "GHOSTJVSRGDNR", "server_tree_name": "-", "success": "-"}, {"ts": "1786940969.676279", "uid": "CkzDmMOT3Zlh54zV4", "id.orig_h": "172.16.14.10", "id.orig_p": "49740", "id.resp_h": "172.16.14.50", "id.resp_p": "445", "username": "DC01$", "hostname": "DC01", "domainname": "CASCADELOGISTIC", "server_nb_computer_name": "GHOSTJVSRGDNR", "server_dns_computer_name": "GHOSTJVSRGDNR", "server_tree_name": "-", "success": "-"}]}, "dns": {"fields": ["ts", "uid", "id.orig_h", "id.orig_p", "id.resp_h", "id.resp_p", "proto", "trans_id", "rtt", "query", "qclass", "qclass_name", "qtype", "qtype_name", "rcode", "rcode_name", "AA", "TC", "RD", "RA", "Z", "answers", "TTLs", "rejected", "opcode", "opcode_name"], "rows": [{"ts": "1786940967.488647", "uid": "CncJJr3Lom1seGle2l", "id.orig_h": "172.16.14.50", "id.orig_p": "47342", "id.resp_h": "172.16.14.10", "id.resp_p": "53", "proto": "udp", "trans_id": "57100", "rtt": "0.000385", "query": "dc01.cascadelogistics.local", "qclass": "1", "qclass_name": "C_INTERNET", "qtype": "1", "qtype_name": "A", "rcode": "0", "rcode_name": "NOERROR", "AA": "T", "TC": "F", "RD": "T", "RA": "T", "Z": "0", "answers": "172.16.14.10", "TTLs": "3600.000000", "rejected": "F", "opcode": "0", "opcode_name": "query"}]}, "ssl": {"fields": ["ts", "uid", "id.orig_h", "id.orig_p", "id.resp_h", "id.resp_p", "version", "cipher", "curve", "server_name", "resumed", "last_alert", "next_protocol", "established", "ssl_history", "cert_chain_fps", "client_cert_chain_fps", "sni_matches_cert"], "rows": [{"ts": "1786940954.930048", "uid": "CZ4rxd28JrN3sn9rf5", "id.orig_h": "172.16.14.50", "id.orig_p": "51344", "id.resp_h": "172.16.14.10", "id.resp_p": "636", "version": "TLSv12", "cipher": "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384", "curve": "secp384r1", "server_name": "-", "resumed": "F", "last_alert": "-", "next_protocol": "-", "established": "T", "ssl_history": "CsxkrnXGIi", "cert_chain_fps": "fd3aba726595d2fadb7bc64a0963076cf74e814dd5ce265f40966b95281f258d", "client_cert_chain_fps": "(empty)", "sni_matches_cert": "-"}]}, "weird": {"fields": ["ts", "uid", "id.orig_h", "id.orig_p", "id.resp_h", "id.resp_p", "name", "addl", "notice", "peer", "source"], "rows": [{"ts": "1786940967.608353", "uid": "CZ4rxd28JrN3sn9rf5", "id.orig_h": "172.16.14.50", "id.orig_p": "51344", "id.resp_h": "172.16.14.10", "id.resp_p": "636", "name": "truncated_tcp_payload", "addl": "-", "notice": "F", "peer": "zeek", "source": "TCP"}, {"ts": "1786940969.238208", "uid": "Cjrmv93QGUfk3YpH9j", "id.orig_h": "172.16.14.50", "id.orig_p": "33970", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "name": "netlogon_dce_rpc_auth_type", "addl": "68", "notice": "F", "peer": "zeek", "source": "DCE_RPC"}, {"ts": "1786940969.309926", "uid": "CMKauN31AWz099rCP1", "id.orig_h": "172.16.14.50", "id.orig_p": "33982", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "name": "netlogon_dce_rpc_auth_type", "addl": "68", "notice": "F", "peer": "zeek", "source": "DCE_RPC"}, {"ts": "1786940969.376264", "uid": "CAv5ey263sTDalQvZi", "id.orig_h": "172.16.14.50", "id.orig_p": "33986", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "name": "netlogon_dce_rpc_auth_type", "addl": "68", "notice": "F", "peer": "zeek", "source": "DCE_RPC"}, {"ts": "1786940969.444641", "uid": "C67rce3SDxcSSJ0yPd", "id.orig_h": "172.16.14.50", "id.orig_p": "33994", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "name": "netlogon_dce_rpc_auth_type", "addl": "68", "notice": "F", "peer": "zeek", "source": "DCE_RPC"}, {"ts": "1786940969.507057", "uid": "CMzoAf2ijSiKOE2JHe", "id.orig_h": "172.16.14.50", "id.orig_p": "33996", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "name": "netlogon_dce_rpc_auth_type", "addl": "68", "notice": "F", "peer": "zeek", "source": "DCE_RPC"}, {"ts": "1786940969.574007", "uid": "CAwJUA3CUYlgWKMb9e", "id.orig_h": "172.16.14.50", "id.orig_p": "34006", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "name": "netlogon_dce_rpc_auth_type", "addl": "68", "notice": "F", "peer": "zeek", "source": "DCE_RPC"}, {"ts": "1786940969.635797", "uid": "CJPYC425YVH9sPH1yh", "id.orig_h": "172.16.14.50", "id.orig_p": "34012", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "name": "netlogon_dce_rpc_auth_type", "addl": "68", "notice": "F", "peer": "zeek", "source": "DCE_RPC"}, {"ts": "1786940969.706756", "uid": "CoYVGC3tohiPfIKIU3", "id.orig_h": "172.16.14.50", "id.orig_p": "34018", "id.resp_h": "172.16.14.10", "id.resp_p": "49668", "name": "netlogon_dce_rpc_auth_type", "addl": "68", "notice": "F", "peer": "zeek", "source": "DCE_RPC"}]}, "x509": {"fields": ["ts", "fingerprint", "certificate.version", "certificate.serial", "certificate.subject", "certificate.issuer", "certificate.not_valid_before", "certificate.not_valid_after", "certificate.key_alg", "certificate.sig_alg", "certificate.key_type", "certificate.key_length", "certificate.exponent", "certificate.curve", "san.dns", "san.uri", "san.email", "san.ip", "basic_constraints.ca", "basic_constraints.path_len", "host_cert", "client_cert"], "rows": [{"ts": "1786940966.754832", "fingerprint": "fd3aba726595d2fadb7bc64a0963076cf74e814dd5ce265f40966b95281f258d", "certificate.version": "3", "certificate.serial": "55000000021A724469D28E0B03000000000002", "certificate.subject": "CN=DC01.cascadelogistics.local", "certificate.issuer": "CN=Cascade-Issuing-CA,DC=cascadelogistics,DC=local", "certificate.not_valid_before": "1786848098.000000", "certificate.not_valid_after": "1818384098.000000", "certificate.key_alg": "rsaEncryption", "certificate.sig_alg": "sha256WithRSAEncryption", "certificate.key_type": "rsa", "certificate.key_length": "2048", "certificate.exponent": "65537", "certificate.curve": "-", "san.dns": "DC01.cascadelogistics.local", "san.uri": "-", "san.email": "-", "san.ip": "-", "basic_constraints.ca": "-", "basic_constraints.path_len": "-", "host_cert": "T", "client_cert": "F"}]}};
+const DISPLAY = {"conn": ["ts", "id.orig_h", "id.orig_p", "id.resp_h", "id.resp_p", "proto", "service", "duration", "conn_state"], "dce_rpc": ["ts", "id.orig_h", "id.orig_p", "id.resp_h", "id.resp_p", "endpoint", "operation"], "ntlm": ["ts", "id.orig_h", "id.orig_p", "id.resp_h", "id.resp_p", "username", "domainname", "server_nb_computer_name", "success"], "dns": ["ts", "id.orig_h", "id.resp_h", "query", "qtype_name", "rcode_name", "answers"], "ssl": ["ts", "id.orig_h", "id.orig_p", "id.resp_h", "id.resp_p", "version", "cipher", "established"], "weird": ["ts", "id.orig_h", "id.orig_p", "id.resp_h", "id.resp_p", "name", "addl", "source"], "x509": ["ts", "certificate.subject", "certificate.issuer", "certificate.key_length", "san.dns"]};
+
+let currentTab = 'conn';
+let searchVal = '';
+let srcFilter = '';
+let dstFilter = '';
+
+function ts2str(ts) {
+  if (!ts || ts === '-') return ts;
+  const d = new Date(parseFloat(ts) * 1000);
+  return d.toISOString().replace('T',' ').replace('Z','').slice(0,22);
+}
+
+function colorCell(field, val) {
+  if (val === '-' || val === '') return `<span style="color:#444">-</span>`;
+  if (field === 'ts') return `<span class="ts">${ts2str(val)}</span>`;
+  if ((field === 'id.orig_h' || field === 'id.resp_h') && val === '172.16.14.50') {
+    return `<span class="tag-attacker">${val}</span>`;
+  }
+  if (field === 'success') {
+    if (val === 'T') return `<span class="tag-success">T</span>`;
+    if (val === 'F') return `<span class="tag-fail">F</span>`;
+    return `<span style="color:#444">-</span>`;
+  }
+  if (field === 'conn_state') {
+    const color = val === 'SF' ? '#27ae60' : val.startsWith('RST') ? '#c0392b' : '#888';
+    return `<span style="color:${color}">${val}</span>`;
+  }
+  return val;
+}
+
+function isChase(row) {
+  return row['id.orig_h'] === '172.16.14.10' && row['id.resp_h'] === '172.16.14.50';
+}
+
+function matchesFilters(row, fields) {
+  if (srcFilter) {
+    const srcFields = ['id.orig_h'];
+    if (!srcFields.some(f => row[f] === srcFilter)) return false;
+  }
+  if (dstFilter) {
+    const dstFields = ['id.resp_h'];
+    if (!dstFields.some(f => row[f] === dstFilter)) return false;
+  }
+  if (searchVal) {
+    const s = searchVal.toLowerCase();
+    return fields.some(f => (row[f]||'').toLowerCase().includes(s));
+  }
+  return true;
+}
+
+function renderTable(tab) {
+  const log = DATA[tab];
+  const dispFields = DISPLAY[tab];
+  const rows = log.rows;
+  const filtered = rows.filter(r => matchesFilters(r, log.fields));
+
+  document.getElementById('result-count').textContent =
+    `${filtered.length} of ${rows.length} records`;
+
+  const noRes = document.getElementById('no-results');
+  const container = document.getElementById('table-container');
+
+  if (filtered.length === 0) {
+    container.innerHTML = '';
+    noRes.style.display = 'block';
+    return;
+  }
+  noRes.style.display = 'none';
+
+  let html = '<table><thead><tr>';
+  dispFields.forEach(f => {
+    html += `<th title="${f}">${f}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  filtered.forEach(row => {
+    const chase = isChase(row);
+    html += `<tr class="${chase ? 'highlight' : ''}">`;
+    dispFields.forEach(f => {
+      const val = row[f] || '-';
+      html += `<td title="${val}">${colorCell(f, val)}</td>`;
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table>';
+  container.innerHTML = html;
+
+  // update tab counts
+  document.querySelectorAll('.tab').forEach(t => {
+    const name = t.dataset.tab;
+    const total = DATA[name].rows.length;
+    const fRows = DATA[name].rows.filter(r => matchesFilters(r, DATA[name].fields));
+    t.querySelector('.count').textContent = `(${fRows.length}/${total})`;
+  });
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === tab);
+  });
+  renderTable(tab);
+}
+
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => switchTab(t.dataset.tab));
+});
+
+document.getElementById('search').addEventListener('input', e => {
+  searchVal = e.target.value.trim();
+  renderTable(currentTab);
+});
+
+document.getElementById('src-filter').addEventListener('change', e => {
+  srcFilter = e.target.value;
+  renderTable(currentTab);
+});
+
+document.getElementById('dst-filter').addEventListener('change', e => {
+  dstFilter = e.target.value;
+  renderTable(currentTab);
+});
+
+document.getElementById('clear-btn').addEventListener('click', () => {
+  searchVal = '';
+  srcFilter = '';
+  dstFilter = '';
+  document.getElementById('search').value = '';
+  document.getElementById('src-filter').value = '';
+  document.getElementById('dst-filter').value = '';
+  renderTable(currentTab);
+});
+
+// init
+switchTab('conn');
+</script>
+</body>
+</html>
