@@ -9,7 +9,7 @@ title: ""
     *Network Forensics · Easy · Wireshark · 6 questions*
 
 - ### [Chasing Certighost's Tail](https://w0xi.github.io/chasing-certighost/)
-    *SOC · Medium · Browser · 7 questions*
+    *SOC · Medium · Logs Interface · 7 questions*
 
 ---
 
