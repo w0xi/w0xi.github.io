@@ -55,6 +55,13 @@ the detection logic that should have caught this earlier.
 The investigation interface (`certighost_investigation.html`) is self-contained —
 open it in any browser, no setup required.
 
+## Download
+
+| File | Description |
+|---|---|
+| [`certighost_investigation.html`](https://github.com/w0xi/w0xi.github.io/releases/download/v1.0/certighost_investigation.html) | Lab artifact — open in any browser, no setup required |
+| [`certighost_final.pcap`](https://github.com/w0xi/w0xi.github.io/releases/download/v1.0/certighost_final.pcap) | Optional — packet-level analysis only, not required for any question |
+
 ## Tools
 
 Browser (HTML investigation interface) · Zeek logs (`conn.log`, `dce_rpc.log`, `ntlm.log`)
