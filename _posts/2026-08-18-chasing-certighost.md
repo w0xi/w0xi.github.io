@@ -58,7 +58,7 @@ open it in any browser, no setup required.
 
 All seven Zeek log types are pre-loaded.
 
-For packet-level analysis: [`certighost_final.pcap`](https://github.com/w0xi/w0xi.github.io/releases/download/v1.0/certighost_final.pcap) (optional: not required for any question)
+For packet-level analysis: [`certighost_final.pcap`](https://github.com/w0xi/w0xi.github.io/releases/download/v1.0/certighost_final.pcap) (optional, not required for any question)
 
 ## Tools
 
