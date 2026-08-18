@@ -184,5 +184,5 @@ connection. Eight identical entries in 35 seconds.
 - [Kudelski Security - Certighost Advisory](https://kudelskisecurity.com/research/certighost)
 - [CVE-2026-54121 - Microsoft Security Response Center](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-54121)
 - [Certighost PoC - GitHub](https://github.com/aniqfakhrul/CVE-2026-54121)
-- [Technical Analysis H0j3n Gist](https://gist.github.com/H0j3n/a5ef2609b5f2944ac2390a191a534c26)
+- [Technical Analysis by H0j3n Gist](https://gist.github.com/H0j3n/a5ef2609b5f2944ac2390a191a534c26)
 - [MITRE ATT&CK T1649 - Steal or Forge Authentication Certificates](https://attack.mitre.org/techniques/T1649/)
