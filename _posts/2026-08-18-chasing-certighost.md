@@ -107,6 +107,8 @@ A Domain Controller initiating outbound SMB to a workstation is the inversion
 of normal AD traffic flow. In a healthy domain, servers authenticate clients
 not the other way around.
 
+![](/screenshots/1siem.png)
+
 ### 3. Identity impersonation via Netlogon relay
 
 When the CA connects to the rogue SMB server, it authenticates using its own
@@ -116,6 +118,8 @@ name the attacker registered.
 
 The attacker's rogue server then relays this authentication to the real DC via
 Netlogon. `dce_rpc.log` records the full relay sequence for each attempt:
+
+![](/screenshots/2siem.png)
 
 ```
 NetrServerReqChallenge
