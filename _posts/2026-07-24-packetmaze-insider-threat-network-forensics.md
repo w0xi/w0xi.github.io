@@ -53,7 +53,7 @@ Wireshark · exiftool · MAC lookup (dnschecker)
 
 ### 1. Subject identification and FTP credential exposure
 
-Starting with **Statistics → Protocol Hierarchy** gave an immediate overview of
+Starting with **Statistics to Protocol Hierarchy** gave an immediate overview of
 protocols present: FTP, FTP-DATA, DNS, TLS, HTTP. A mix of plaintext and encrypted
 activity, suggesting multiple investigative angles.
 
@@ -72,7 +72,7 @@ The subject's IP was identified as **`192.168.1.26`** and MAC as
 
 ### 2. DNS analysis and behavioural context
 
-Filtering for DNS and cross-referencing via **Statistics → Conversations → IPv6**
+Filtering for DNS and cross-referencing via **Statistics to Conversations to IPv6**
 revealed the DNS server's IPv6 address: `fe80::c80b:adff:feaa:1db7`. This required
 pivoting from the subject's IPv4 address to its MAC, then matching that MAC in the
 IPv6 tab: a multi-step correlation testing understanding of Layer 2 and Layer 3
@@ -183,7 +183,7 @@ server.
    exiftool is a genuinely useful skill.
 
 3. Layer 2 and Layer 3 correlation is a real investigative technique, not a lab
-   curiosity. Pivoting IPv4 → MAC → IPv6 was the only route to the DNS server's
+   curiosity. Pivoting IPv4 to MAC to IPv6 was the only route to the DNS server's
    address.
 
 4. Behavioural context matters as much as technical artifacts. ProtonMail use, 7-zip
