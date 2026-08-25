@@ -154,7 +154,7 @@ vol -f CYBERDEF-567078-20230213-171333.raw windows.handles --pid 880 | grep File
    essential. A rootkit operating at kernel level can hide itself from the OS entirely,
    making disk-based artifacts unreliable. Memory is the ground truth.
 
-4. Plugin sequencing matters: `pslist` → `pstree` → `malfind` → `ldrmodules` →
+4. Plugin sequencing matters: `pslist` to `pstree` to `malfind` to `ldrmodules` to
    `handles` is a repeatable Windows memory triage workflow, covering process
    anomalies, injection, hidden modules, and file artifacts in a logical order.
 
